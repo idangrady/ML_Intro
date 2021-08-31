@@ -9,6 +9,7 @@ import itertools
 
 import numpy as np
 import matplotlib.pyplot as plt
+import pdb; pdb.set_trace()
 
 from matplotlib import colors
 
@@ -478,31 +479,53 @@ def test_xval_learning_alg(xval_learning_alg,perceptron):
     else:
         incorrect(expected,result)
     
-######################################################################
-# Your code is written below
-
-def perceptron(data, labels, params={}, hook=None):
-    # if T not in params, default to 100
-    T = params.get('T', 100)
-    # Your implementation here
-    pass
-
-#Visualization of perceptron, comment in the next three lines to see your perceptron code in action:
 '''
 for datafn in (super_simple_separable_through_origin,super_simple_separable):
    data, labels = datafn()
    test_linear_classifier(datafn,perceptron,draw=True)
 '''
-
+# if positive(th[idx],x_i,th_0)!=labels[idx]:
 #Test Cases:
 #test_perceptron(perceptron)
+
+def perceptron(data, labels, params={}, hook=None):
+    # if T not in params, default to 100
+    T = params.get('T', 100)
+    # Your implementation here
+    d, n = data.shape
+    th = np.zeros((d,1))
+    th_0 =np.zeros((1,1))
+    mistakes = 0
+    for cycle in range(T):
+        for j in range(n):
+            x_i = np.reshape(data[:,j],(d,1))
+            if((np.dot(th.T, x_i) + th_0)*labels[:,j]<=0):
+                th+= (labels[:,j]*x_i)
+                th_0 += labels[:,j]
+                mistakes+=1                
+    return(th,th_0)
 
 
 def averaged_perceptron(data, labels, params={}, hook=None):
     # if T not in params, default to 100
     T = params.get('T', 100)
     # Your implementation here
-    pass
+    d,n = data.shape
+    th = np.zeros((d,1)) # regular_weight
+    th_0 = np.zeros((1,1))        
+    th_0s = np.zeros((1,1))# plural thetha_0
+    th_s = np.zeros((d,1))# plural weight
+
+    for _ in range(T):
+        for j in range(n):
+            x_i = np.reshape(data[:,j],(d,1))
+            if((np.dot(th.T, x_i)+ th_0)*labels[:,j]<=0):
+                th+= (labels[:,j]*x_i)
+                th_0 += labels[:,j]
+            
+            th_s = th_s +th
+            th_0s = th_0s + th_0
+    return th_s/(n*T), th_0s / (n*T)
 
 # Visualization of Averaged Perceptron:
 '''
@@ -515,26 +538,112 @@ for datafn in (super_simple_separable, xor, xor_more, big_higher_dim_separable):
 #test_averaged_perceptron(averaged_perceptron)
 
 def eval_classifier(learner, data_train, labels_train, data_test, labels_test):
-    pass
-
+    
+    th, th_0 = learner(data_train,labels_train)
+    score_accurecy_trained_model = score(data_test,labels_test, th,th_0)
+    d,n = data_test.shape
+    return(score_accurecy_trained_model/n)
 #Test cases:
-#test_eval_classifier(eval_classifier,perceptron)
 
 
 def eval_learning_alg(learner, data_gen, n_train, n_test, it):
-    pass
+    accuracy=[]
+    for i in range(it):
+        gen = data_gen(num_points=20, pflip=0.25)
+        X,y = gen()
+        th, th_0 = learner(X,y)
+        X_test_gen, Y_test_gen = gen(n_test)
 
-#Test cases:
+        round_score = score(X_test_gen,Y_test_gen, th,th_0)/n_test
+        accuracy.append(round_score)
+    return(np.mean(accuracy))
+#Test cases: 
 #test_eval_learning_alg(eval_learning_alg,perceptron)
 
 
-def xval_learning_alg(learner, data, labels, k):
-    pass
+def xval_learning_alg_2(learner, data, labels, k):
+    #check wherever the k is equaly divided:
+    d,n = data.shape
+    round_score =[]
+    splitted_data = np.array_split(data,k,axis=1)
+    splitted_labels = np.array_split(labels,k,axis = 1)
 
+    for i in range(k):
+        if (i==0):     
+            the_i_data = splitted_data[i]
+            the_i_label = splitted_labels[i]
+            th_temp, th_0_temp = learner(the_i_data,the_i_label)
+            test_data_temp =np.concatenate(splitted_data[i+1:],axis =1)
+            test_labels_temp = np.concatenate(splitted_labels[i+1:],axis =1)
+            d,n = test_data_temp.shape
+            temp_score = score(test_data_temp, test_labels_temp,th_temp,th_0_temp)
+            round_score.append(temp_score/n)
+        if (i ==k-1):
+            the_i_data = np.concatenate(splitted_data[:i-1],axis =1)
+            the_i_label = np.concatenate(splitted_labels[:i-1],axis =1)
+            th_temp, th_0_temp = learner(the_i_data,the_i_label)
+            test_data_temp =np.concatenate(splitted_data[i:],axis =1)
+            test_labels_temp = np.concatenate(splitted_labels[i:],axis =1)
+            d,n = test_data_temp.shape
+            temp_score = score(test_data_temp, test_labels_temp,th_temp,th_0_temp)
+            round_score.append(temp_score/n)
+        if(i!=0 and i!= k-1):
+            the_i_data = np.concatenate(splitted_data[:i],axis =1)
+            the_i_label = np.concatenate(splitted_labels[:i],axis =1)
+            th_temp, th_0_temp = learner(the_i_data,the_i_label)
+            test_data_temp =np.concatenate(splitted_data[i+1:],axis =1)
+            test_labels_temp = np.concatenate(splitted_labels[i+1:],axis =1)
+            d,n = test_data_temp.shape
+            temp_score = score(test_data_temp, test_labels_temp,th_temp,th_0_temp)
+            round_score.append(temp_score/n)
+    return(np.mean(round_score))
 #Test cases:
 #test_xval_learning_alg(xval_learning_alg,perceptron)
+def xval_learning_alg(learner, data, labels, k):
+    #check wherever the k is equaly divided:
+    d,n = data.shape
+    round_score =[]
+    splitted_data = np.array_split(data,k,axis=1)
+    splitted_labels = np.array_split(labels,k,axis = 1)
 
+    for i in range(k):
+        the_i_data = splitted_data[i]
+        the_i_label = splitted_labels[i]
+        if (i==0):     
+            x_train = np.concatenate(splitted_data[i+1:],axis = 1)
+            y_train = np.concatenate(splitted_labels[i+1:],axis = 1)
+        elif (i ==k-1):
+            x_train = np.concatenate(splitted_data[:i],axis = 1)
+            y_train = np.concatenate(splitted_labels[:i],axis = 1)
+        else:
+            x_train = np.concatenate((np.concatenate(splitted_data[:i],axis = 1),np.concatenate(splitted_data[i+1:],axis = 1)),axis = 1)
+            y_train = np.concatenate((np.concatenate(splitted_labels[:i],axis =1),np.concatenate(splitted_labels[i+1:],axis =1)),axis = 1)
+        d,n = the_i_data.shape
+        th, th0 = learner(x_train, y_train)
+        temp_score = score(the_i_data, the_i_label,th,th0)
+        round_score.append(temp_score/n)
+    mean_score = np.mean(round_score)
+    print(mean_score)
+    return(np.mean(mean_score))
 
 #For problem 10, here is an example of how to use gen_flipped_lin_separable, in this case with a flip probability of 50%
 #print(eval_learning_alg(perceptron, gen_flipped_lin_separable(pflip=.5), 20, 20, 5))
-
+#print(perceptron(data1,labels1))
+# =============================================================================
+# X,y = super_simple_separable_through_origin()
+# print(len(cv(data1)))
+# plot_data(plot_data)
+# =============================================================================
+if __name__ == "__main__":
+    data_set = np.array(([[2, 3,  4,  5]]))
+    label = np.array([[1, 1, -1, -1]])
+    accuracy_percp = eval_learning_alg(perceptron, gen_flipped_lin_separable,20,20, 100)
+    print(accuracy_percp)
+    #Test:
+# =============================================================================
+#     test_eval_classifier(eval_classifier,perceptron)
+# 
+# =============================================================================
+    #test_eval_learning_alg
+    #test_eval_learning_alg(eval_learning_alg,perceptron)
+    #test_xval_learning_alg(xval_learning_alg,perceptron)
