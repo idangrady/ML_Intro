@@ -25,20 +25,6 @@ features = [('cylinders', hw3.raw),
 auto_data, auto_labels = hw3.auto_data_and_labels(auto_data_all, features)
 print('auto data and labels shape', auto_data.shape, auto_labels.shape)
 
-if False:                               # set to True to see histograms
-    import matplotlib.pyplot as plt
-    for feat in range(auto_data.shape[0]):
-        print('Feature', feat, features[feat][0])
-        # Plot histograms in one window, different colors
-        plt.hist(auto_data[feat,auto_labels[0,:] > 0])
-        plt.hist(auto_data[feat,auto_labels[0,:] < 0])
-        plt.show()
-        # Plot histograms in two windows, different colors
-        fig,(a1,a2) = plt.subplots(nrows=2)
-        a1.hist(auto_data[feat,auto_labels[0,:] > 0])
-        a2.hist(auto_data[feat,auto_labels[0,:] < 0])
-        plt.show()
-
 #-------------------------------------------------------------------------------
 # Analyze auto data
 #-------------------------------------------------------------------------------

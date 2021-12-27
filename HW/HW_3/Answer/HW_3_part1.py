@@ -85,13 +85,14 @@ def plot_separator(ax, th, th_0):
 def plot_data(data, labels, ax = None, clear = False,
                   xmin = None, xmax = None, ymin = None, ymax = None):
     if ax is None:
-        if xmin == None: xmin = np.min(data[0, :]) - 0.5
-        if xmax == None: xmax = np.max(data[0, :]) + 0.5
-        if ymin == None: ymin = np.min(data[1, :]) - 0.5
-        if ymax == None: ymax = np.max(data[1, :]) + 0.5
+        if xmin is None: xmin = np.min(data[0, :]) - 0.5
+        if xmax is None: xmax = np.max(data[0, :]) + 0.5
+        if ymin is None: ymin = np.min(data[1, :]) - 0.5
+        if ymax is None: ymax = np.max(data[1, :]) + 0.5
         ax = tidy_plot(xmin, xmax, ymin, ymax)
 
-        x_range = xmax - xmin; y_range = ymax - ymin
+        x_range = xmax - xmin
+        y_range = ymax - ymin
         if .1 < x_range / y_range < 10:
             ax.set_aspect('equal')
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
@@ -104,7 +105,8 @@ def plot_data(data, labels, ax = None, clear = False,
     ax.scatter(data[0,:], data[1,:], c = colors,
                     marker = 'o', s=50, edgecolors = 'none')
     # Seems to occasionally mess up the limits
-    ax.set_xlim(xlim); ax.set_ylim(ylim)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
     ax.grid(True, which='both')
     #ax.axhline(y=0, color='k')
     #ax.axvline(x=0, color='k')
@@ -181,7 +183,7 @@ def averaged_perceptron(data, labels, params={}, hook=None):
     # print(T)
     # print(n*T)
     m = 0
-    for i in range(T):
+    for _ in range(T):
         for j in range(n):
             x = np.reshape(data[:, j], (d, 1))
             if (np.dot(np.transpose(theta), x) + theta_0 )*labels[:, j] <= 0:
@@ -199,8 +201,9 @@ def perceptron(data, labels, params = {}, hook = None):
     T = params.get('T', Global_T)
     (d, n) = data.shape
     m = 0
-    theta = np.zeros((d, 1)); theta_0 = np.zeros((1, 1))
-    for t in range(T):
+    theta = np.zeros((d, 1))
+    theta_0 = np.zeros((1, 1))
+    for _ in range(T):
         for i in range(n):
             x = data[:,i:i+1]
             y = labels[:,i:i+1]
@@ -274,8 +277,12 @@ def one_hot(v, entries):
 def auto_data_and_labels(auto_data, features):
     features = [('mpg', raw)] + features
     std = {f:std_vals(auto_data, f) for (f, phi) in features if phi==standard}
-    entries = {f:list(set([entry[f] for entry in auto_data])) \
-               for (f, phi) in features if phi==one_hot}
+    entries = {
+        f: list({entry[f] for entry in auto_data})
+        for (f, phi) in features
+        if phi == one_hot
+    }
+
     print('avg and std', std)
     print('entries in one_hot field', entries)
     vals = []
@@ -380,31 +387,18 @@ if __name__ == "__main__":
     feature_set_3 = [('weight', standard), ('origin',one_hot)]
     feature, labels = auto_data_and_labels(data, [('cylinders',raw), ('displacement',raw), ('horsepower', raw),
                                                    ('weight',raw), ('acceleration',raw), ('origin',raw)])
-    
-    
-# =============================================================================
-#     th_, th0 = averaged_perceptron(feature_set_2,labels,params={'T': 10})
-#     print(th_,th0)
-# =============================================================================
-# =============================================================================
-#     accuracy = xval_learning_alg(perceptron, feature, labels, k = 10)
-#     print(accuracy)
-#     accuracy_avg = xval_learning_alg(averaged_perceptron, feature, labels, k = 10)
-#     print(accuracy_avg)
-# =============================================================================
-    feature_count = 1
-    for feature in [feature_set_2, feature_set_3]:
-         print('Accuracy on features: feature_set_%d'%feature_count)
-         for T in [10]:#, 10, 50]:
-             print('T: %d'%T)
-             feature, labels = auto_data_and_labels(data, feature)
-             print('In perceptron:')
-             accuracy = xval_learning_alg(perceptron, feature, labels, k=10, params={'T': T})
-             print('In avg perceptron:')
-             accuracy_avg = xval_learning_alg(averaged_perceptron, feature, labels, k=10, params={'T': 10})
-             print(list(np.concatenate([accuracy, accuracy_avg]).reshape(1,2)))
-    
-         feature_count += 1
+
+
+    for feature_count, feature in enumerate([feature_set_2, feature_set_3], start=1):
+        print('Accuracy on features: feature_set_%d'%feature_count)
+        for T in [10]:#, 10, 50]:
+            print('T: %d'%T)
+            feature, labels = auto_data_and_labels(data, feature)
+            print('In perceptron:')
+            accuracy = xval_learning_alg(perceptron, feature, labels, k=10, params={'T': T})
+            print('In avg perceptron:')
+            accuracy_avg = xval_learning_alg(averaged_perceptron, feature, labels, k=10, params={'T': 10})
+            print(list(np.concatenate([accuracy, accuracy_avg]).reshape(1,2)))
     # feature, labels = auto_data_and_labels(data, feature_set_2)
     # theta, theta_0 = averaged_perceptron(feature, labels, params={'T':10})
     # print(theta)

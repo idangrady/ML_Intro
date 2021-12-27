@@ -43,8 +43,7 @@ def top_bottom_features(x):
         x_un = np.array((np.mean(x[l:l+1,:])).reshape((1,1)))
         a_under = np.concatenate((a_under,x_un))
     a_under = np.mean(a_under)
-    output = np.array((a_0,a_under)).reshape((2,1))
-    return(output)
+    return np.array((a_0,a_under)).reshape((2,1))
 
 
 ans=top_bottom_features(np.array([[1,2,3],[3,9,2],[2,1,9]])).tolist()

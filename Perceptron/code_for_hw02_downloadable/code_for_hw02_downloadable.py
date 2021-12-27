@@ -106,13 +106,14 @@ def plot_data(data, labels, ax = None, clear = False,
     returns matplotlib plot on ax 
     '''
     if ax is None:
-        if xmin == None: xmin = np.min(data[0, :]) - 0.5
-        if xmax == None: xmax = np.max(data[0, :]) + 0.5
-        if ymin == None: ymin = np.min(data[1, :]) - 0.5
-        if ymax == None: ymax = np.max(data[1, :]) + 0.5
+        if xmin is None: xmin = np.min(data[0, :]) - 0.5
+        if xmax is None: xmax = np.max(data[0, :]) + 0.5
+        if ymin is None: ymin = np.min(data[1, :]) - 0.5
+        if ymax is None: ymax = np.max(data[1, :]) + 0.5
         ax = tidy_plot(xmin, xmax, ymin, ymax)
 
-        x_range = xmax - xmin; y_range = ymax - ymin
+        x_range = xmax - xmin
+        y_range = ymax - ymin
         if .1 < x_range / y_range < 10:
             ax.set_aspect('equal')
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
@@ -125,7 +126,8 @@ def plot_data(data, labels, ax = None, clear = False,
     ax.scatter(data[0,:], data[1,:], c = colors,
                     marker = 'o', s=50, edgecolors = 'none')
     # Seems to occasionally mess up the limits
-    ax.set_xlim(xlim); ax.set_ylim(ylim)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
     ax.grid(True, which='both')
     #ax.axhline(y=0, color='k')
     #ax.axvline(x=0, color='k')
@@ -139,18 +141,17 @@ def plot_nonlin_sep(predictor, ax = None, xmin = None , xmax = None,
     '''
     if ax is None:
         ax = tidy_plot(xmin, xmax, ymin, ymax)
+    elif xmin is None:
+        xmin, xmax = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
     else:
-        if xmin == None:
-            xmin, xmax = ax.get_xlim()
-            ymin, ymax = ax.get_ylim()
-        else:
-            ax.set_xlim((xmin, xmax))
-            ax.set_ylim((ymin, ymax))
+        ax.set_xlim((xmin, xmax))
+        ax.set_ylim((ymin, ymax))
 
     cmap = colors.ListedColormap(['black', 'white'])
     bounds=[-2,0,2]
     norm = colors.BoundaryNorm(bounds, cmap.N)            
-            
+
     ima = np.array([[predictor(x1i, x2i) \
                          for x1i in np.linspace(xmin, xmax, res)] \
                          for x2i in np.linspace(ymin, ymax, res)])
@@ -496,13 +497,13 @@ def perceptron(data, labels, params={}, hook=None):
     th = np.zeros((d,1))
     th_0 =np.zeros((1,1))
     mistakes = 0
-    for cycle in range(T):
+    for _ in range(T):
         for j in range(n):
             x_i = np.reshape(data[:,j],(d,1))
             if((np.dot(th.T, x_i) + th_0)*labels[:,j]<=0):
                 th+= (labels[:,j]*x_i)
                 th_0 += labels[:,j]
-                mistakes+=1                
+                mistakes+=1
     return(th,th_0)
 
 
@@ -548,7 +549,7 @@ def eval_classifier(learner, data_train, labels_train, data_test, labels_test):
 
 def eval_learning_alg(learner, data_gen, n_train, n_test, it):
     accuracy=[]
-    for i in range(it):
+    for _ in range(it):
         gen = data_gen(num_points=20, pflip=0.25)
         X,y = gen()
         th, th_0 = learner(X,y)
@@ -587,7 +588,7 @@ def xval_learning_alg_2(learner, data, labels, k):
             d,n = test_data_temp.shape
             temp_score = score(test_data_temp, test_labels_temp,th_temp,th_0_temp)
             round_score.append(temp_score/n)
-        if(i!=0 and i!= k-1):
+        if i not in [0, k - 1]:
             the_i_data = np.concatenate(splitted_data[:i],axis =1)
             the_i_label = np.concatenate(splitted_labels[:i],axis =1)
             th_temp, th_0_temp = learner(the_i_data,the_i_label)

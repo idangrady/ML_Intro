@@ -82,13 +82,14 @@ def plot_separator(ax, th, th_0):
 def plot_data(data, labels, ax = None, clear = False,
                   xmin = None, xmax = None, ymin = None, ymax = None):
     if ax is None:
-        if xmin == None: xmin = np.min(data[0, :]) - 0.5
-        if xmax == None: xmax = np.max(data[0, :]) + 0.5
-        if ymin == None: ymin = np.min(data[1, :]) - 0.5
-        if ymax == None: ymax = np.max(data[1, :]) + 0.5
+        if xmin is None: xmin = np.min(data[0, :]) - 0.5
+        if xmax is None: xmax = np.max(data[0, :]) + 0.5
+        if ymin is None: ymin = np.min(data[1, :]) - 0.5
+        if ymax is None: ymax = np.max(data[1, :]) + 0.5
         ax = tidy_plot(xmin, xmax, ymin, ymax)
 
-        x_range = xmax - xmin; y_range = ymax - ymin
+        x_range = xmax - xmin
+        y_range = ymax - ymin
         if .1 < x_range / y_range < 10:
             ax.set_aspect('equal')
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
@@ -101,7 +102,8 @@ def plot_data(data, labels, ax = None, clear = False,
     ax.scatter(data[0,:], data[1,:], c = colors,
                     marker = 'o', s=50, edgecolors = 'none')
     # Seems to occasionally mess up the limits
-    ax.set_xlim(xlim); ax.set_ylim(ylim)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
     ax.grid(True, which='both')
     #ax.axhline(y=0, color='k')
     #ax.axvline(x=0, color='k')
@@ -149,8 +151,9 @@ def perceptron(data, labels, params = {}, hook = None):
     T = params.get('T', Global_T)
     (d, n) = data.shape
 
-    theta = np.zeros((d, 1)); theta_0 = np.zeros((1, 1))
-    for t in range(T):
+    theta = np.zeros((d, 1))
+    theta_0 = np.zeros((1, 1))
+    for _ in range(T):
         for i in range(n):
             x = data[:,i:i+1]
             y = labels[:,i:i+1]
@@ -164,10 +167,11 @@ def averaged_perceptron(data, labels, params = {}, hook = None):
     T = params.get('T', Global_T)
     (d, n) = data.shape
 
-    theta = np.zeros((d, 1)); theta_0 = np.zeros((1, 1))
+    theta = np.zeros((d, 1))
+    theta_0 = np.zeros((1, 1))
     theta_sum = theta.copy()
     theta_0_sum = theta_0.copy()
-    for t in range(T):
+    for _ in range(T):
         for i in range(n):
             x = data[:,i:i+1]
             y = labels[:,i:i+1]
@@ -284,8 +288,12 @@ def one_hot_2(x,y,k):
 def auto_data_and_labels(auto_data, features):
     features = [('mpg', raw)] + features
     std = {f:std_vals(auto_data, f) for (f, phi) in features if phi==standard}
-    entries = {f:list(set([entry[f] for entry in auto_data])) \
-               for (f, phi) in features if phi==one_hot}
+    entries = {
+        f: list({entry[f] for entry in auto_data})
+        for (f, phi) in features
+        if phi == one_hot
+    }
+
     print('avg and std', std)
     print('entries in one_hot field', entries)
     vals = []
