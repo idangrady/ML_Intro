@@ -43,20 +43,20 @@ def gd(f,df, x0, step_size_fn, max_iter):
     x_i = x0
     d,n  = x0.shape
     xs.append(x_i)
-    for i in range(max_iter):
+    for _ in range(max_iter):
         if(d<=1):
             fs_result = f1((x_i))
             de_f  = df1(x_i)            
         else:
             fs_result = f2((x_i))
             de_f  = df2(x_i)
-            
+
         step_s = step_size_fn(0)
         new_x = x_i - (step_s* de_f)
         fs.append(fs_result)
         x_i = new_x  
         xs.append(new_x)
-        
+
     return (new_x,fs,xs)
 
 
@@ -123,8 +123,7 @@ def d_hinge(v):
 # Returns the gradient of hinge_loss(x, y, th, th0) with respect to th
 def d_hinge_loss_th(x, y, th, th0):
     step1 = d_hinge(y * (np.dot(th.T, x) + th0))
-    output = step1 * y *x
-    return  output
+    return step1 * y *x
 
 # Returns the gradient of hinge_loss(x, y, th, th0) with respect to th0
 def d_hinge_loss_th0(x, y, th, th0):

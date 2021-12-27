@@ -83,13 +83,14 @@ def plot_separator(ax, th, th_0):
 def plot_data(data, labels, ax = None, clear = False,
                   xmin = None, xmax = None, ymin = None, ymax = None):
     if ax is None:
-        if xmin == None: xmin = np.min(data[0, :]) - 0.5
-        if xmax == None: xmax = np.max(data[0, :]) + 0.5
-        if ymin == None: ymin = np.min(data[1, :]) - 0.5
-        if ymax == None: ymax = np.max(data[1, :]) + 0.5
+        if xmin is None: xmin = np.min(data[0, :]) - 0.5
+        if xmax is None: xmax = np.max(data[0, :]) + 0.5
+        if ymin is None: ymin = np.min(data[1, :]) - 0.5
+        if ymax is None: ymax = np.max(data[1, :]) + 0.5
         ax = tidy_plot(xmin, xmax, ymin, ymax)
 
-        x_range = xmax - xmin; y_range = ymax - ymin
+        x_range = xmax - xmin
+        y_range = ymax - ymin
         if .1 < x_range / y_range < 10:
             ax.set_aspect('equal')
         xlim, ylim = ax.get_xlim(), ax.get_ylim()
@@ -102,7 +103,8 @@ def plot_data(data, labels, ax = None, clear = False,
     ax.scatter(data[0,:], data[1,:], c = colors,
                     marker = 'o', s=50, edgecolors = 'none')
     # Seems to occasionally mess up the limits
-    ax.set_xlim(xlim); ax.set_ylim(ylim)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
     ax.grid(True, which='both')
     #ax.axhline(y=0, color='k')
     #ax.axvline(x=0, color='k')
@@ -113,18 +115,17 @@ def plot_nonlin_sep(predictor, ax = None, xmin = None , xmax = None,
                         ymin = None, ymax = None, res = 30):
     if ax is None:
         ax = tidy_plot(xmin, xmax, ymin, ymax)
+    elif xmin is None:
+        xmin, xmax = ax.get_xlim()
+        ymin, ymax = ax.get_ylim()
     else:
-        if xmin == None:
-            xmin, xmax = ax.get_xlim()
-            ymin, ymax = ax.get_ylim()
-        else:
-            ax.set_xlim((xmin, xmax))
-            ax.set_ylim((ymin, ymax))
+        ax.set_xlim((xmin, xmax))
+        ax.set_ylim((ymin, ymax))
 
     cmap = colors.ListedColormap(['black', 'white'])
     bounds=[-2,0,2]
     norm = colors.BoundaryNorm(bounds, cmap.N)            
-            
+
     ima = np.array([[predictor(x1i, x2i) \
                          for x1i in np.linspace(xmin, xmax, res)] \
                          for x2i in np.linspace(ymin, ymax, res)])
@@ -256,8 +257,9 @@ def perceptron(data, labels, params = {}, hook = None):
     T = params.get('T', 1)
     (d, n) = data.shape
     m = 0
-    theta = np.zeros((d, 1)); theta_0 = np.zeros((1, 1))
-    for t in range(T):
+    theta = np.zeros((d, 1))
+    theta_0 = np.zeros((1, 1))
+    for _ in range(T):
         for i in range(n):
             x = data[:,i:i+1]
             y = labels[:,i:i+1]

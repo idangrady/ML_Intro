@@ -12,46 +12,43 @@ def perceptron(data, labels, params = {}, hook = None):
         labels = np.array(labels)
     T = params.get('T', 50)
     (d, n) = data.shape
-    th = np.zeros((d,1)); th_0 = np.zeros((1,1))
+    th = np.zeros((d,1))
+    th_0 = np.zeros((1,1))
     mistake =0
 
-    
-    for i in range(T):
+
+    for _ in range(T):
         for j in range(n):
             x = data[:,j:j+1]
             y = labels[:,j:j+1]
-            
-            if(y*(np.dot(th.T,x)+ th_0)>0):
-                pass
-            else:
+
+            if y * (np.dot(th.T, x) + th_0) <= 0:
                 mistake+=1
                 th += (-y)*x
                 th_0 += y
                 if hook: hook((th, th_0))
-    
+
     return (th, th_0,mistake)
 
 def perceptron_through_origin(data,th,target, labels, params = {}, hook = None):
     # if T not in params, default to 100
-   
+
     T = params.get('T', 50)
     (d, n) = data.shape
     #th = np.zeros((d,1)); th_0 = np.zeros((1,1))
-    
+
     mistake =0
     while True:
         for j in range(n):
             x = data[:,j:j+1]
             y = labels[:,j:j+1]
-            
-            if(y*(np.dot(th.T,x))>0):
-                pass
-            else:
+
+            if y * (np.dot(th.T, x)) <= 0:
                 mistake+=1
                 th += y*x
                 #if hook: hook((th))
                 if(th== target):break
-    
+
     return (th,mistake)
 def calculate_the_min_margin(x,th,th_0,y):
     d,n =x.shape
@@ -102,7 +99,6 @@ def one_hot(x,y,k):
 
 
 def r(data, center):
-    pass
     d,n= data.shape
     max_dis =0
     for i in range(n):
@@ -114,7 +110,6 @@ def r(data, center):
 
 def distance_m(th,point):
     x,y = point
-    pass
 
 def one_off_scale(data,labels):
     n = data[-1]+1
@@ -134,13 +129,14 @@ def perceptron_2(data, labels, params = {}, hook = None):
     (d, n) = data.shape
     mistake = 0
     y = labels
-    theta = np.zeros((n, 1)); theta_0 = np.zeros((1, 1))
-    for t in range(T):
+    theta = np.zeros((n, 1))
+    theta_0 = np.zeros((1, 1))
+    for _ in range(T):
         for i in range(n):
             x = data[:,i:i+1]
             y_i = y.T[i]
             result= (np.dot(x.T, theta)+ theta_0) 
-             
+
             if y_i * (np.dot( theta.T,x,)+ theta_0) <= 0.0:
                 theta +=   y_i * x
                 theta_0 +=  y_i
